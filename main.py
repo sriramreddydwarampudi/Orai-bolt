@@ -63,11 +63,12 @@ class KivyCamera(Image):
         if self.capture:
             try:
                 self.capture.release()
+                Clock.schedule_once(lambda dt: None, 0.3)
             except:
                 pass
             self.capture = None
 
-        Clock.schedule_once(lambda dt: self._open_camera(camera_port), 0.15)
+        Clock.schedule_once(lambda dt: self._open_camera(camera_port), 0.5)
 
     def _open_camera(self, camera_port):
         self.camera_port = camera_port
@@ -324,11 +325,19 @@ class DentalDetectionApp(App):
         gallery.open()
 
     def switch_camera(self, instance):
-        if self.camera_widget:
+        if self.camera_widget and not self.camera_widget._opening:
             new_camera = 1 if self.selected_camera == 0 else 0
             print(f"🔄 Switching from camera {self.selected_camera} to camera {new_camera}")
             self.selected_camera = new_camera
-            self.camera_widget.initialize_camera(new_camera)
+
+            if self.camera_widget.capture:
+                try:
+                    self.camera_widget.capture.release()
+                except:
+                    pass
+                self.camera_widget.capture = None
+
+            Clock.schedule_once(lambda dt: self.camera_widget.initialize_camera(new_camera), 0.3)
 
     def on_stop(self):
         if self.camera_widget and self.camera_widget.capture:
